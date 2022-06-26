@@ -7,9 +7,13 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String
     },
-    password: {
+    password: { 
         type: String
     },
+    resetPasswordLink: {
+        data: String,
+        default: ''
+    }
 })
 
 module.exports = mongoose.model('User', userSchema);

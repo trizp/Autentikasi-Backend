@@ -2,6 +2,7 @@ require('dotenv').config();
 const User = require('../models/user_model');
 const bcryptjs = require('bcryptjs');
 const jsonwebtoken = require('jsonwebtoken');
+const { kirimEmail }          = require('../helpers')
 
 exports.DaftarUser = async (req, res) => {
     const { username, email, password } = req.body
@@ -74,5 +75,35 @@ exports.getSingleUser = async (req,res) => {
     return res.status(200).json({
         message: 'berhasil di panggil',
         data: user
+    })
+}
+
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body
+
+    const user = await User.findOne({email: email})
+    if(!user) {
+        return res.status(200).json({
+            status: false,
+            message: 'Email tidak tersedia'
+        })
+    }
+
+    const token = jsonwebtoken.sign({
+        iduser: user._id
+    }, process.env.JWT_SECRET)
+
+    await user.updateOne({resetPasswordLink: token})
+
+    const templateEmail = {
+        from: 'PTSOLUSI',
+        to: email,
+        subject: 'Link Reset Password',
+        html: `<p> Silahkan klik link dibawah ini untuk reset password anda! </p> <p> ${process.env.CLIENT_URL}/resetpassword/${token} </p>`
+    }
+    kirimEmail(templateEmail)
+    return res.status(200).json({
+        status: true,
+        message: 'Link Reset Password Terkirim!'
     })
 }
